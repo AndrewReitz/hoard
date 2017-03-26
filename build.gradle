@@ -1,0 +1,33 @@
+plugins {
+  id "nebula.optional-base" version "3.1.0"
+}
+
+apply plugin: 'java'
+
+repositories {
+  jcenter()
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_6
+targetCompatibility = JavaVersion.VERSION_1_6
+
+group = 'io.github.roguesdev'
+verion = '0.1.0-SNAPSHOT'
+
+dependencies {
+  compile 'org.reactivestreams:reactive-streams:1.0.0.final'
+
+  compile 'com.squareup.moshi:moshi:1.4.0', optional
+  compile 'com.google.code.gson:gson:2.8.0', optional
+  compile 'io.reactivex:rxjava:1.2.9' , optional
+  compile 'io.reactivex:rxjava-reactive-streams:1.2.1', optional
+  compile 'io.reactivex.rxjava2:rxjava:2.0.8', optional
+
+  testCompile 'org.spockframework:spock-core:1.1-groovy-2.4-rc-4'
+  testCompile 'net.bytebuddy:byte-buddy:1.6.12'
+  testCompile 'org.objenesis:objenesis:2.5.1'
+
+  // needed to test encryption
+  testCompile 'org.bouncycastle:bcprov-jdk15on:1.56'
+}
+

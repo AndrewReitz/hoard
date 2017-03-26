@@ -1,0 +1,7 @@
+= Hoard
+
+A simple key value storage library.
+
+== Usage
+
+== License
