@@ -29,11 +29,11 @@ public class MoshiSerializer implements Serializer {
 
   private final Moshi moshi;
 
-  MoshiSerializer() {
+  public MoshiSerializer() {
     this(new Moshi.Builder().build());
   }
 
-  MoshiSerializer(Moshi moshi) {
+  public MoshiSerializer(Moshi moshi) {
     if (moshi == null) throw new NullPointerException("moshi == null");
     this.moshi = moshi;
   }
