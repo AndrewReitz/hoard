@@ -198,11 +198,11 @@ public class Hoard {
      */
     public Builder rootDirectory(File rootDirectory) {
       if (rootDirectory == null) throw new NullPointerException("rootDirectory == null");
-      if (!rootDirectory.isDirectory()) {
-        throw new IllegalArgumentException("rootDirectory is not a directory");
-      }
       if (!rootDirectory.exists() && !rootDirectory.mkdirs()) {
         throw new IllegalArgumentException("rootDirectory does not exist, and can not be created");
+      }
+      if (!rootDirectory.isDirectory()) {
+        throw new IllegalArgumentException("rootDirectory is not a directory");
       }
 
       this.rootDirectory = rootDirectory;
