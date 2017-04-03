@@ -14,7 +14,7 @@ import rx.Observable;
  * @since 1.0
  */
 public interface RxDepositor<T> {
-  Observable<Void> save(T value);
+  Observable<Void> store(T value);
   Observable<T> retrieve();
   Observable<Void> delete();
 }

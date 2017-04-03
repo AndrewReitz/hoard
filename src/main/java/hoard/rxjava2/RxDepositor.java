@@ -12,7 +12,7 @@ import io.reactivex.Single;
  * @since 1.0
  */
 public interface RxDepositor<T> {
-  Completable save(T value);
+  Completable store(T value);
   Single<T> retrieve();
   Completable delete();
 }

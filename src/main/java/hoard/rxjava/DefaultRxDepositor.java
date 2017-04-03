@@ -12,8 +12,8 @@ class DefaultRxDepositor<T> implements RxDepositor<T> {
     this.depositor = depositor;
   }
 
-  @Override public Observable<Void> save(T value) {
-    return RxReactiveStreams.toObservable(depositor.save(value));
+  @Override public Observable<Void> store(T value) {
+    return RxReactiveStreams.toObservable(depositor.store(value));
   }
 
   @Override public Observable<T> retrieve() {

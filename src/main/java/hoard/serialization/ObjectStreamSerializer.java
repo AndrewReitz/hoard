@@ -12,7 +12,7 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 
 /**
- * Uses {@link ObjectOutputStream} and {@link ObjectInputStream} to save objects. All
+ * Uses {@link ObjectOutputStream} and {@link ObjectInputStream} to store objects. All
  * objects to be saved must implement {@link Serializable}.
  * This is the default implementation for {@link Hoard}.
  *

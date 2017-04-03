@@ -4,6 +4,9 @@ import hoard.Depositor;
 import hoard.Hoard;
 import hoard.ReactiveStreamDepositor;
 import java.lang.reflect.Type;
+import java.util.Map;
+import rx.Observable;
+import rx.RxReactiveStreams;
 
 /**
  * Wrapper for {@link Hoard} that produces {@link Depositor}s that can be used with RxJava 1.x
@@ -45,5 +48,41 @@ public class RxHoard {
     if (type == null) throw new NullPointerException("type == null");
     ReactiveStreamDepositor<T> reactiveDepositor = hoard.createReactiveDepositor(key, type);
     return new DefaultRxDepositor<T>(reactiveDepositor);
+  }
+
+  /** Deletes all values stored by {@link Hoard}. */
+  public void deleteAll() {
+    hoard.deleteAll();
+  }
+
+  /**
+   * Retrieve all values stored in {@link Hoard}. This will pull all values into memory and could
+   * possibly cause problems. It is recommended to use {@link #retrieveAllReactive()} to avoid
+   * heavy memory usage.
+   * This can be useful for creating migrations.
+   *
+   * @return Map of all key-values stored.
+   */
+  public Map<String, Object> retrieveAll() {
+    return hoard.retrieveAll();
+  }
+
+  /**
+   * Same as {@link #deleteAll()} but wrapped in a {@link Observable}.
+   *
+   * @return Observable that when subscribed will preform the delete operation.
+   */
+  public Observable<Void> deleteAllReactive() {
+    return RxReactiveStreams.toObservable(hoard.deleteAllReactive());
+  }
+
+  /**
+   * Same as {@link #retrieveAll()} but wrapped in a {@link Observable}.
+   *
+   * @return Observable that when subscribed will retrieve the key value pairs stored in
+   * {@link Hoard} and provide them as a {@link Hoard.Pair}
+   */
+  public Observable<Hoard.Pair> retrieveAllReactive() {
+    return RxReactiveStreams.toObservable(hoard.retrieveAllReactive());
   }
 }

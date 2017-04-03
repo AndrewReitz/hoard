@@ -4,9 +4,15 @@ import hoard.serialization.ObjectStreamSerializer;
 import hoard.serialization.Serializer;
 import java.io.File;
 import java.lang.reflect.Type;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 /**
- * Factory for creating new {@link Depositor} or {@link ReactiveStreamDepositor}
+ * Factory for creating new {@link Depositor} or {@link ReactiveStreamDepositor}. Also provides
+ * utilities for doing large operations for clearing all values, and retrieving all values.
  *
  * @since 1.0
  */
@@ -48,15 +54,143 @@ public class Hoard {
     return new DefaultReactiveStreamDepositor<T>(depositor);
   }
 
+  /** Deletes all values stored by {@link Hoard}. */
+  @SuppressWarnings("ResultOfMethodCallIgnored")
+  public void deleteAll() {
+    File[] files = rootDirectory.listFiles();
+    if (files == null) return;
+    for (File file : files) {
+      file.delete();
+    }
+  }
+
+  /**
+   * Retrieve all values stored in {@link Hoard}. This will pull all values into memory and could
+   * possibly cause problems. It is recommended to use {@link #retrieveAllReactive()} to avoid
+   * heavy memory usage.
+   * This can be useful for creating migrations.
+   *
+   * @return Map of all key-values stored.
+   */
+  public Map<String, Object> retrieveAll() {
+    Map<String, Object> returnValues = new LinkedHashMap<String, Object>();
+    String[] list = rootDirectory.list();
+    if (list == null) return returnValues;
+
+    for (String name : list) {
+      Object retrieve = createDepositor(name, Object.class).retrieve();
+      returnValues.put(name, retrieve);
+    }
+
+    return returnValues;
+  }
+
+  /**
+   * Same as {@link #deleteAll()} but wrapped in a {@link Publisher}.
+   *
+   * @return Publisher that when subscribed will preform the delete operation.
+   */
+  public Publisher<Void> deleteAllReactive() {
+    return new Publisher<Void>() {
+      @Override public void subscribe(final Subscriber<? super Void> s) {
+        s.onSubscribe(new Subscription() {
+          volatile boolean canceled = false;
+
+          @SuppressWarnings("ResultOfMethodCallIgnored")
+          @Override public void request(long n) {
+            try {
+              File[] files = rootDirectory.listFiles();
+              if (files == null) return;
+              for (File file : files) {
+                file.delete();
+              }
+              if (canceled) return;
+              s.onComplete();
+            } catch (Exception e) {
+              if (canceled) return;
+              s.onError(e);
+            }
+          }
+
+          @Override public void cancel() {
+            canceled = true;
+          }
+        });
+      }
+    };
+  }
+
+  /**
+   * Same as {@link #retrieveAll()} but wrapped in a {@link Publisher}.
+   *
+   * @return Publisher that when subscribed will retrieve the key value pairs stored in
+   * {@link Hoard} and provide them as a {@link Pair}
+   */
+  public Publisher<Pair> retrieveAllReactive() {
+    return new Publisher<Pair>() {
+      @Override public void subscribe(final Subscriber<? super Pair> s) {
+        s.onSubscribe(new Subscription() {
+
+          volatile boolean canceled = false;
+
+          @Override public void request(long n) {
+            String[] list = rootDirectory.list();
+            if (list == null) {
+              if (canceled) return;
+              s.onComplete();
+              return;
+            }
+
+            for (String name : list) {
+              Object retrieve = createDepositor(name, Object.class).retrieve();
+              Pair value = new Pair(name, retrieve);
+              if (canceled) return;
+              s.onNext(value);
+            }
+
+            if (canceled) return;
+            s.onComplete();
+          }
+
+          @Override public void cancel() {
+            canceled = true;
+          }
+        });
+      }
+    };
+  }
+
+  public static class Pair {
+    private final String key;
+    private final Object value;
+
+    public Pair(String key, Object value) {
+      this.key = key;
+      this.value = value;
+    }
+
+    public String key() {
+      return key;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T value() {
+      return (T) value;
+    }
+  }
+
+  /**
+   * Builder for creating {@link Hoard}.
+   */
   public static class Builder {
     private File rootDirectory;
     private Serializer serializer = new ObjectStreamSerializer();
 
     /**
-     * Set the root directory for {@link Hoard} to save values to. This directory should ONLY
+     * Set the root directory for {@link Hoard} to store values to. This directory should ONLY
      * be utilized for {@link Hoard}.
      *
-     * @param rootDirectory The directory to save values to.
+     * @param rootDirectory The directory to store values to.
      * @return builder for chaining methods.
      * @throws NullPointerException if rootDirectory is null.
      * @throws IllegalArgumentException if rootDirectory is not a directory or does not exist and
@@ -94,6 +228,7 @@ public class Hoard {
 
     /**
      * Creates a new instance of {@link Hoard}
+     *
      * @throws IllegalStateException if a root direcotry has not been provided.
      */
     public Hoard build() {

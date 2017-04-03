@@ -12,8 +12,8 @@ class DefaultRxDepositor<T> implements RxDepositor<T> {
     this.depositor = depositor;
   }
 
-  @Override public Completable save(T value) {
-    return Completable.fromPublisher(depositor.save(value));
+  @Override public Completable store(T value) {
+    return Completable.fromPublisher(depositor.store(value));
   }
 
   @Override public Single<T> retrieve() {

@@ -21,7 +21,7 @@ class DefaultDepositor<T> implements Depositor<T> {
     this.type = type;
   }
 
-  @Override public synchronized void save(T value) {
+  @Override public synchronized void store(T value) {
     FileOutputStream fileOutputStream = null;
     try {
       fileOutputStream = new FileOutputStream(saveFile);
@@ -52,10 +52,7 @@ class DefaultDepositor<T> implements Depositor<T> {
 
   @SuppressWarnings("ResultOfMethodCallIgnored")
   @Override public synchronized void delete() {
-    if (!saveFile.exists()) {
-      return;
-    }
-
+    if (!saveFile.exists()) return;
     saveFile.delete();
   }
 }
