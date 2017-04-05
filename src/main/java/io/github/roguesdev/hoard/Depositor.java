@@ -10,6 +10,7 @@ package io.github.roguesdev.hoard;
 public interface Depositor<T> {
   /**
    * Saves the value for future look up.
+   * Passing in null is the same as deleting the value.
    *
    * @param value The value to store.
    */

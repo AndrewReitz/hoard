@@ -57,7 +57,7 @@ public class RxHoard {
 
   /**
    * Retrieve all values stored in {@link Hoard}. This will pull all values into memory and could
-   * possibly cause problems. It is recommended to use {@link #retrieveAllReactive()} to avoid
+   * possibly cause problems. It is recommended to use {@link #retrieveAllRx()} to avoid
    * heavy memory usage.
    * This can be useful for creating migrations.
    *
@@ -72,7 +72,7 @@ public class RxHoard {
    *
    * @return Observable that when subscribed will preform the delete operation.
    */
-  public Observable<Void> deleteAllReactive() {
+  public Observable<Void> deleteAllRx() {
     return RxReactiveStreams.toObservable(hoard.deleteAllReactive());
   }
 
@@ -82,7 +82,7 @@ public class RxHoard {
    * @return Observable that when subscribed will retrieve the key value pairs stored in
    * {@link Hoard} and provide them as a {@link Hoard.Pair}
    */
-  public Observable<Hoard.Pair> retrieveAllReactive() {
+  public Observable<Hoard.Pair> retrieveAllRx() {
     return RxReactiveStreams.toObservable(hoard.retrieveAllReactive());
   }
 }

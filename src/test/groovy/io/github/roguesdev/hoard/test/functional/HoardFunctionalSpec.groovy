@@ -75,6 +75,27 @@ class HoardFunctionalSpec extends Specification {
     dir.root.listFiles().toList() == []
   }
 
+  void "should retrieve all values"() {
+    given:
+    def hoard = Hoard.builder().with {
+      rootDirectory(dir.root)
+      build()
+    }
+
+    hoard.createDepositor('test1', String).store('hello world')
+    hoard.createDepositor('test2', Person).store(new Person(firstName: 'Jack', lastName: 'Sparrow'))
+    hoard.createDepositor('test3', Types.newParameterizedType(List, Integer)).store([1, 2, 3])
+
+    when:
+    def allValues = hoard.retrieveAll()
+
+
+    then:
+    allValues['test1'] == 'hello world'
+    allValues['test2'] == new Person(firstName: 'Jack', lastName: 'Sparrow')
+    allValues['test3'] == [1, 2, 3]
+  }
+
   void "should work with reactive defaults"() {
     given: 'default build of hoard'
     def hoard = Hoard.builder().with {
@@ -139,24 +160,51 @@ class HoardFunctionalSpec extends Specification {
     testSubscriber2.assertComplete()
   }
 
-  void "should retrieve all values"() {
+  void "should delete all with reactive"() {
     given:
     def hoard = Hoard.builder().with {
       rootDirectory(dir.root)
       build()
     }
 
+    def testSubscriber = new TestSubscriber()
+
+    hoard.createDepositor('test1', String).store('Foo')
+    hoard.createDepositor('test2', String).store('Bar')
+    hoard.createDepositor('test3', String).store('Baz')
+
+    when:
+    hoard.deleteAllReactive()
+      .subscribe(testSubscriber)
+
+    then:
+    dir.root.listFiles().toList() == []
+    testSubscriber.assertNoValues()
+    testSubscriber.assertComplete()
+  }
+
+  void "should retrieve all with reactive"() {
+    given:
+    def hoard = Hoard.builder().with {
+      rootDirectory(dir.root)
+      build()
+    }
+
+    def testSubscriber = new TestSubscriber()
+
     hoard.createDepositor('test1', String).store('hello world')
     hoard.createDepositor('test2', Person).store(new Person(firstName: 'Jack', lastName: 'Sparrow'))
     hoard.createDepositor('test3', Types.newParameterizedType(List, Integer)).store([1, 2, 3])
 
+    def expected = [new Hoard.Pair('test1', 'hello world'), new Hoard.Pair('test2',
+      new Person(firstName: 'Jack', lastName: 'Sparrow')), new Hoard.Pair('test3', [1, 2, 3])]
+
     when:
-    def allValues = hoard.retrieveAll()
+    hoard.retrieveAllReactive().subscribe(testSubscriber)
 
 
     then:
-    allValues['test1'] == 'hello world'
-    allValues['test2'] == new Person(firstName: 'Jack', lastName: 'Sparrow')
-    allValues['test3'] == [1, 2, 3]
+    testSubscriber.assertValues(*expected)
+    testSubscriber.assertComplete()
   }
 }

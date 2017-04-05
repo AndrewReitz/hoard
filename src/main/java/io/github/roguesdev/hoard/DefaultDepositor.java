@@ -22,6 +22,11 @@ class DefaultDepositor<T> implements Depositor<T> {
   }
 
   @Override public synchronized void store(T value) {
+    if (value == null) {
+      delete();
+      return;
+    }
+
     FileOutputStream fileOutputStream = null;
     try {
       fileOutputStream = new FileOutputStream(saveFile);

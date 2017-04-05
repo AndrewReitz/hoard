@@ -48,7 +48,7 @@ public class RxHoard2 {
 
   /**
    * Retrieve all values stored in {@link Hoard}. This will pull all values into memory and could
-   * possibly cause problems. It is recommended to use {@link #rxRetrieveAll()} to avoid
+   * possibly cause problems. It is recommended to use {@link #retrieveAllRx()} to avoid
    * heavy memory usage.
    * This can be useful for creating migrations.
    *
@@ -63,7 +63,7 @@ public class RxHoard2 {
    *
    * @return Completable that when subscribed will preform the delete operation.
    */
-  public Completable rxDeleteAll() {
+  public Completable deleteAllRx() {
     return Completable.fromPublisher(hoard.deleteAllReactive());
   }
 
@@ -73,7 +73,7 @@ public class RxHoard2 {
    * @return Observable that when subscribed will retrieve the key value pairs stored in
    * {@link Hoard} and provide them as a {@link Hoard.Pair}
    */
-  public Observable<Hoard.Pair> rxRetrieveAll() {
+  public Observable<Hoard.Pair> retrieveAllRx() {
     return Observable.fromPublisher(hoard.retrieveAllReactive());
   }
 }
