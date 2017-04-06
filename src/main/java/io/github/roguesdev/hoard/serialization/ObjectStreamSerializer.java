@@ -20,6 +20,8 @@ import java.lang.reflect.Type;
  */
 public class ObjectStreamSerializer implements Serializer {
 
+  public ObjectStreamSerializer() { }
+
   @Override public <T> void serialize(Type type, T value, OutputStream outputStream) throws IOException {
     ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
     objectOutputStream.writeObject(value);

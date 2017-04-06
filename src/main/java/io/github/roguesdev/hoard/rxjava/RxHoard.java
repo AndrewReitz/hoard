@@ -9,7 +9,7 @@ import rx.Observable;
 import rx.RxReactiveStreams;
 
 /**
- * Wrapper for {@link Hoard} that produces {@link Depositor}s that can be used with RxJava 1.x
+ * Wrapper for {@link Hoard} that produces {@link Depositor}s that can utilize RxJava 1.x
  *
  * @since 1.0
  */

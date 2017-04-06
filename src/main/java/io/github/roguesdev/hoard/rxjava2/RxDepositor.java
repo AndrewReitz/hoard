@@ -9,6 +9,7 @@ import io.reactivex.Single;
  * equivalents.
  *
  * @param <T> The type the depositor saves and retrieves.
+ * @see io.github.roguesdev.hoard.Depositor
  * @since 1.0
  */
 public interface RxDepositor<T> {

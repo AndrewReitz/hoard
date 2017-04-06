@@ -160,6 +160,9 @@ public class Hoard {
     };
   }
 
+  /**
+   * A key value pair.
+   */
   public static class Pair {
     private final String key;
     private final Object value;
@@ -252,7 +255,8 @@ public class Hoard {
     /**
      * Creates a new instance of {@link Hoard}
      *
-     * @throws IllegalStateException if a root direcotry has not been provided.
+     * @return a new instance of Hoard created with the values set in the builder.
+     * @throws IllegalStateException if a rootDirectory has not been provided.
      */
     public Hoard build() {
       if (rootDirectory == null) {

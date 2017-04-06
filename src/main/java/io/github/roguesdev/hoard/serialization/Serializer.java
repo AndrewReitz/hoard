@@ -19,6 +19,7 @@ public interface Serializer {
    * @param value The value to serialize to outputStream.
    * @param outputStream The stream to serialize the object to.
    * @param <T> The type of the object passed in as value
+   * @throws IOException if operations on outputStream fail.
    */
   <T> void serialize(Type type, T value, OutputStream outputStream) throws IOException;
 
@@ -29,6 +30,7 @@ public interface Serializer {
    * @param inputStream The stream to read the object from.
    * @param <T> The type of the object to return as.
    * @return The de-serialized value.
+   * @throws IOException if operations on inputStream fail.
    */
   <T> T deserialize(Type type, InputStream inputStream) throws IOException;
 }

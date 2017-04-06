@@ -27,7 +27,7 @@ import java.util.Arrays;
  *
  * @since 1.0.0
  */
-abstract class Types {
+public abstract class Types {
   static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
 
   /**

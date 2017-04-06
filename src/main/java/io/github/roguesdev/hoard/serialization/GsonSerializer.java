@@ -30,10 +30,20 @@ public class GsonSerializer implements Serializer {
 
   private final Gson gson;
 
+  /**
+   * Default constructor.
+   * Creates a {@link Gson} instance using the emptry constructor. If an instance
+   * that supports custom serialization is required see {@link #GsonSerializer(Gson)}
+   */
   public GsonSerializer() {
-    this.gson = new Gson();
+    this(new Gson());
   }
 
+  /**
+   * Build a new instance of {@link GsonSerializer} with a configured version of gson.
+   *
+   * @param gson instance of {@link Gson} that has been setup by the user for serializing objects.
+   */
   public GsonSerializer(Gson gson) {
     if (gson == null) throw new NullPointerException("gson can not be null");
     this.gson = gson;

@@ -1,7 +1,139 @@
 = Hoard
 
-A simple key value storage library.
+A simple and lightweight key value storage system for the JVM and Android.
 
 == Usage
 
+=== Getting the Jar
+
+Currently Hoard is hosted by JitPack, before the 1.0 release it will be moved and published
+to jcenter.
+
+To use Hoard simply add the following to your `build.gradle`. For other build systems
+see the https://jitpack.io/#rogues-dev/hoard[JitPack documentation].
+
+----
+repositories {
+  jcenter()
+  maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    compile 'com.github.rogues-dev:hoard:0.1.0'
+}
+----
+
+=== Setup
+
+To create a `Hoard` instance you simple use the builder and provide a directory where
+all your values should be stored. This directory should ONLY be used by `Hoard`.
+
+Optionally you can provide a custom serializer. By default object streams are used, and thus
+all objects you wish to save must implement Serializable. Other serialization options
+include Moshi, Gson, and Aes Encryption. If none of these options fit your needs you can
+simply implement your own by implementing the `io.github.roguesdev.hoard.serialization.Serializer`
+interface. Note: That Gson and Moshi require the respected libraries be added your classpath, as
+they are not included with this library.
+
+----
+Hoard hoard = Hoard.builder()
+        .rootDirectory(new File("cacheName"))
+        //.rootDirectory(context.getDir("cacheName", MODE_PRIVATE)) # For Android
+        .serialzationAdapter(new MoshiSerializer()) // optional, defaults to ObjectStreamSerializer
+        .build();
+----
+
+=== Basic Usage
+
+----
+User user = new User("Smarmy", "Quincy");
+
+// create your depositor
+Depositor<User> userInfo = hoard.createDepositor("userInfo", User.class);
+
+// store the data
+userInfo.store(user);
+
+// retrieve it later
+User storedUser = userInfo.retrieve();
+----
+
+In this example all methods used on the Depositor are blocking. If you would like to have async
+operations use one of the reactive options described below.
+
+=== Reactive Streams
+
+The only library that `Hoard` depends on is
+https://github.com/reactive-streams/reactive-streams-jvm/[Reactive Streams]. This is in order to
+keep the library lightweight, but also compatible with all the different reactive options. `Hoard`
+includes options for both RxJava 1.x and RxJava 2.x, or you can directly use the factory methods
+to create your own Depositor that will return a Publisher to be utilized by any Reactive
+implementation.
+
+----
+ReactiveStreamDepositor<Long> storeCode = hoard.createReactiveDepositor("storeCode", Long.class);
+storeCode.retrieve().subscribe( /* subscriber implementation here */ );
+----
+
+==== RxJava 1.x
+
+You must include RxJava 1.x and the RxJavaReactiveStreams libraries on your classpath.
+RxJavaReactiveStreams is used to convert the reactive streams Publisher to and Observable.
+
+----
+RxHoard rxHoard = new RxHoard(hoard);
+RxDepositor<Long> storeIdDepositor = rxHoard.createDepositor("storeId", Long.class);
+storeIdDepositor.store(101L).subscribe();
+storeIdDepositor.retrieve().subscribe(System.out::println);
+----
+
+Note: These calls are still synchronous but can easily be made async by utilizing Rx's
+`subscribeOn` method.
+
+==== RxJava 2.x
+
+You must include RxJava 2.x on classpath to utilize this feature. The api mimics that
+of using RxJava 1.x with the exception of the `RxHoard2` being the factory.
+
+----
+RxHoard2 rxHoard = new RxHoard2(hoard);
+RxDepositor<Long> storeIdDepositor = rxHoard.createDepositor("storeId", Long.class);
+storeIdDepositor.store(101L).subscribe();
+storeIdDepositor.retrieve().subscribe(System.out::println);
+----
+
+Note: These calls are still synchronous but can easily be made async by utilizing Rx's
+`subscribeOn` method.
+
+=== A Note About Types
+
+If using AesSerializer or ObjectStreamSerializer (the default), the objects to be saved, must
+implement the Serializable interface.
+
+Passing in the Class or Type of an object to describe what to serialize should be fairly painless,
+but when using types that require generics it can be a little tricky. The `Types` utility
+class comes in handy to describe these types.
+
+----
+Depositor<List<String>> couponCodeDepositor = hoard.createDepositor("couponCodes", Types.newParameterizedType(List.class, String.class));
+couponCodeDepositor.store(Arrays.asList("123", "456", "789"));
+List<String> retrievedCodes = couponCodeDepositor.retrieve();
+----
+
 == License
+
+----
+Copyright 2017 Rogue's Dev
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+----

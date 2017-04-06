@@ -29,10 +29,19 @@ public class MoshiSerializer implements Serializer {
 
   private final Moshi moshi;
 
+  /**
+   * Default constructor that creates an instance of Moshi for serialization.
+   */
   public MoshiSerializer() {
     this(new Moshi.Builder().build());
   }
 
+  /**
+   * Creates a new instance of {@link MoshiSerializer} with the provided moshi instance to
+   * be used for serialization.
+   *
+   * @param moshi the pre-configured moshi this serializer will use.
+   */
   public MoshiSerializer(Moshi moshi) {
     if (moshi == null) throw new NullPointerException("moshi == null");
     this.moshi = moshi;
