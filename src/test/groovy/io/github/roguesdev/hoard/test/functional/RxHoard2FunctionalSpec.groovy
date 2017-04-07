@@ -2,10 +2,10 @@ package io.github.roguesdev.hoard.test.functional
 
 import com.squareup.moshi.Types
 import io.github.roguesdev.hoard.Hoard
+import io.github.roguesdev.hoard.rxjava2.RxDepositor
 import io.github.roguesdev.hoard.rxjava2.RxHoard2
 import io.github.roguesdev.hoard.test.model.Person
 import io.reactivex.observers.TestObserver
-import io.reactivex.subscribers.TestSubscriber
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
@@ -14,67 +14,62 @@ class RxHoard2FunctionalSpec extends Specification {
   @Rule TemporaryFolder dir
 
   void "should work with reactive defaults"() {
-    given: 'default build of hoard'
+    given: 'RxHoard2 created from builder'
     def hoard = new RxHoard2(Hoard.builder().with {
       rootDirectory(dir.root)
       build()
     })
 
-    def testObservable1 = new TestObserver()
-    def testObservable2 = new TestObserver()
-
-    and: 'regular depositor created'
+    and: 'depositor created'
     def depositor = hoard.createDepositor('test', String)
 
+    when: 'exists called'
+    def exists = depositor.exists().test()
+
+    then: 'returns false'
+    exists.assertValue(false)
+    exists.assertComplete()
+
     when: 'delete called and nothing has been saved'
-    depositor.delete().subscribe(testObservable1)
+    def delete = depositor.delete().test()
 
     then: 'no exceptions should be thrown'
-    testObservable1.assertNoValues()
-    testObservable1.onComplete()
+    delete.assertNoValues()
+    delete.onComplete()
 
     when: 'retrieve has been called and nothing saved'
-    depositor.retrieve().subscribe(testObservable2)
+    def retrieve = depositor.retrieve().test()
 
-    then: 'the retrieved value should be null'
-    testObservable2.assertValue(null)
-    testObservable2.assertComplete()
+    then: 'no such element exception' // single can not return null / skip elements
+    retrieve.assertError(NoSuchElementException)
 
     when: 'value is saved then retrieved'
-    testObservable1 = new TestSubscriber()
-    testObservable2 = new TestSubscriber()
-    depositor.store('test').subscribe(testObservable1)
-    depositor.retrieve().subscribe(testObservable2)
+    def testStore = depositor.store('test').test()
+    def testRetrieve = depositor.retrieve().test()
 
     then: 'the retrieved value should be the same as the saved value'
-    testObservable1.assertNoValues()
-    testObservable1.assertComplete()
-    testObservable2.assertValue('test')
-    testObservable2.assertComplete()
+    testStore.assertNoValues()
+    testStore.assertComplete()
+    testRetrieve.assertValue('test')
+    testRetrieve.assertComplete()
 
     when: 'delete is called and there was a value saved'
-    testObservable1 = new TestSubscriber()
-    testObservable2 = new TestSubscriber()
-    depositor.delete().subscribe(testObservable1)
-    depositor.retrieve().subscribe(testObservable2)
+    def testDelete = depositor.delete().test()
+    testRetrieve = depositor.retrieve().test()
 
     then: 'retrieve value is null'
-    testObservable1.assertNoValues()
-    testObservable1.assertComplete()
-    testObservable2.assertValue(null)
-    testObservable2.assertComplete()
+    testDelete.assertNoValues()
+    testDelete.assertComplete()
+    testRetrieve.assertError(NoSuchElementException)
 
-    when: 'null value is saved'
-    testObservable1 = new TestSubscriber()
-    testObservable2 = new TestSubscriber()
-    depositor.store(null).subscribe(testObservable1)
-    depositor.retrieve().subscribe(testObservable2)
+    when: 'null value resets the existence'
+    def storeNull = depositor.store(null).test()
+    testRetrieve = depositor.retrieve().test()
 
     then:
-    testObservable1.assertNoValues()
-    testObservable1.assertComplete()
-    testObservable2.assertValue(null)
-    testObservable2.assertComplete()
+    storeNull.assertNoValues()
+    storeNull.assertComplete()
+    testRetrieve.assertError(NoSuchElementException)
   }
 
   void "should delete all with reactive"() {
@@ -84,20 +79,17 @@ class RxHoard2FunctionalSpec extends Specification {
       build()
     })
 
-    def testObserver = new TestObserver()
-
     hoard.createDepositor('test1', String).store('Foo')
     hoard.createDepositor('test2', String).store('Bar')
     hoard.createDepositor('test3', String).store('Baz')
 
     when:
-    hoard.deleteAllRx()
-      .subscribe(testSubscriber)
+    def testObserver = hoard.deleteAllRx().test()
 
     then:
     dir.root.listFiles().toList() == []
     testObserver.assertNoValues()
-    testObserver.assertCompleted()
+    testObserver.assertComplete()
   }
 
   void "should retrieve all with reactive"() {

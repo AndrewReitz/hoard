@@ -23,4 +23,8 @@ class DefaultRxDepositor<T> implements RxDepositor<T> {
   @Override public Observable<Void> delete() {
     return RxReactiveStreams.toObservable(depositor.delete());
   }
+
+  @Override public Observable<Boolean> exists() {
+    return RxReactiveStreams.toObservable(depositor.exists());
+  }
 }

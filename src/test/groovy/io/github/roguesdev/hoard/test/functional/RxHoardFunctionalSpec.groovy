@@ -14,67 +14,71 @@ class RxHoardFunctionalSpec extends Specification {
   @Rule TemporaryFolder dir
 
   void "should work with reactive defaults"() {
-    given: 'default build of hoard'
+    given: 'default build of RxHoard'
     def hoard = new RxHoard(Hoard.builder().with {
       rootDirectory(dir.root)
       build()
     })
 
-    def testSubscriber1 = new TestSubscriber()
-    def testSubscriber2 = new TestSubscriber()
-
     and: 'regular depositor created'
     def depositor = hoard.createDepositor('test', String)
 
-    when: 'delete called and nothing has been saved'
-    depositor.delete().subscribe(testSubscriber1)
-
-    then: 'no exceptions should be thrown'
-    testSubscriber1.assertNoValues()
-    testSubscriber1.onCompleted()
-
-    when: 'retrieve has been called and nothing saved'
-    depositor.retrieve().subscribe(testSubscriber2)
-
-    then: 'the retrieved value should be null'
-    testSubscriber2.assertValue(null)
-    testSubscriber2.assertCompleted()
-
-    when: 'value is saved then retrieved'
-    testSubscriber1 = new TestSubscriber()
-    testSubscriber2 = new TestSubscriber()
-    depositor.store('test').subscribe(testSubscriber1)
-    depositor.retrieve().subscribe(testSubscriber2)
-
-    then: 'the retrieved value should be the same as the saved value'
-    testSubscriber1.assertNoValues()
-    testSubscriber1.assertCompleted()
-    testSubscriber2.assertValue('test')
-    testSubscriber2.assertCompleted()
-
-    when: 'delete is called and there was a value saved'
-    testSubscriber1 = new TestSubscriber()
-    testSubscriber2 = new TestSubscriber()
-    depositor.delete().subscribe(testSubscriber1)
-    depositor.retrieve().subscribe(testSubscriber2)
-
-    then: 'retrieve value is null'
-    testSubscriber1.assertNoValues()
-    testSubscriber1.assertCompleted()
-    testSubscriber2.assertValue(null)
-    testSubscriber2.assertCompleted()
-
-    when: 'null value is saved'
-    testSubscriber1 = new TestSubscriber()
-    testSubscriber2 = new TestSubscriber()
-    depositor.store(null).subscribe(testSubscriber1)
-    depositor.retrieve().subscribe(testSubscriber2)
+    when: ''
+    def exists = depositor.exists().test()
 
     then:
-    testSubscriber1.assertNoValues()
-    testSubscriber1.assertCompleted()
-    testSubscriber2.assertValue(null)
-    testSubscriber2.assertCompleted()
+    exists.assertValue(false)
+    exists.assertCompleted()
+
+    when: 'delete called and nothing has been saved'
+    def delete = depositor.delete().test()
+
+    then: 'no values received and complete is called'
+    delete.assertNoValues()
+    delete.onCompleted()
+
+    when: 'retrieve has been called and nothing saved'
+    def retrieve = depositor.retrieve().test()
+
+    then: 'there should be no value emitted'
+    retrieve.assertNoValues()
+    retrieve.assertCompleted()
+
+    when: 'value is saved then retrieved'
+    def storeTest = depositor.store('test').test()
+    def testExists = depositor.exists().test()
+    def retrieveTest = depositor.retrieve().test()
+
+    then: 'the retrieved value should be the same as the saved value'
+    storeTest.assertNoValues()
+    storeTest.assertCompleted()
+    testExists.assertValue(true)
+    testExists.assertCompleted()
+    retrieveTest.assertValue('test')
+    retrieveTest.assertCompleted()
+
+    when: 'delete is called and there was a value saved'
+    delete = depositor.delete().test()
+    retrieve = depositor.retrieve().test()
+
+    then: 'retrieve only calls onComplete'
+    delete.assertNoValues()
+    delete.assertCompleted()
+    retrieve.assertNoValues()
+    retrieve.assertCompleted()
+
+    when: 'null value is saved'
+    def nullDeposit = depositor.store(null).test()
+    def nullExists = depositor.exists().test()
+    def nullRetrieve = depositor.retrieve().test()
+
+    then:
+    nullDeposit.assertNoValues()
+    nullDeposit.assertCompleted()
+    nullExists.assertValue(false)
+    nullExists.assertCompleted()
+    nullRetrieve.assertNoValues()
+    nullRetrieve.assertCompleted()
   }
 
   void "should delete all with reactive"() {

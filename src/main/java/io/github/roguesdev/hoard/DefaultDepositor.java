@@ -60,4 +60,8 @@ class DefaultDepositor<T> implements Depositor<T> {
     if (!saveFile.exists()) return;
     saveFile.delete();
   }
+
+  @Override public synchronized boolean exists() {
+    return saveFile.exists();
+  }
 }

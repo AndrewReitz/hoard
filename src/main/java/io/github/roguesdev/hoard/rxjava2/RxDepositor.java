@@ -16,4 +16,5 @@ public interface RxDepositor<T> {
   Completable store(T value);
   Single<T> retrieve();
   Completable delete();
+  Single<Boolean> exists();
 }

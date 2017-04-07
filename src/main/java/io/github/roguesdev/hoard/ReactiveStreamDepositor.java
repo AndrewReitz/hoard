@@ -14,4 +14,5 @@ public interface ReactiveStreamDepositor<T> {
   Publisher<Void> store(T value);
   Publisher<T> retrieve();
   Publisher<Void> delete();
+  Publisher<Boolean> exists();
 }

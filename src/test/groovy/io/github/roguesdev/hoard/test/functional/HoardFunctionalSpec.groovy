@@ -120,7 +120,7 @@ class HoardFunctionalSpec extends Specification {
     depositor.retrieve().subscribe(testSubscriber2)
 
     then: 'the retrieved value should be null'
-    testSubscriber2.assertValue(null)
+    testSubscriber2.assertNoValues()
     testSubscriber2.assertComplete()
 
     when: 'value is saved then retrieved'
@@ -144,7 +144,7 @@ class HoardFunctionalSpec extends Specification {
     then: 'retrieve value is null'
     testSubscriber1.assertNoValues()
     testSubscriber1.assertComplete()
-    testSubscriber2.assertValue(null)
+    testSubscriber2.assertNoValues()
     testSubscriber2.assertComplete()
 
     when: 'null value is saved'
@@ -156,7 +156,7 @@ class HoardFunctionalSpec extends Specification {
     then:
     testSubscriber1.assertNoValues()
     testSubscriber1.assertComplete()
-    testSubscriber2.assertValue(null)
+    testSubscriber2.assertNoValues()
     testSubscriber2.assertComplete()
   }
 
@@ -206,5 +206,54 @@ class HoardFunctionalSpec extends Specification {
     then:
     testSubscriber.assertValues(*expected)
     testSubscriber.assertComplete()
+  }
+
+  void "should return false if value does not exists"() {
+    given: 'plain implementation of hoard'
+    def hoard = Hoard.builder().with {
+      rootDirectory(dir.root)
+      build()
+    }
+
+    and: 'a string depositor'
+    def depositor = hoard.createDepositor("test", String)
+
+    expect: 'the value does not exist'
+    !depositor.exists()
+
+    when: 'the value is saved'
+    depositor.store('yay!')
+
+    then: 'report that the value exists'
+    depositor.exists()
+  }
+
+  void "should return false if value does not exists reactive"() {
+    given: 'plain implementation of hoard'
+    def hoard = Hoard.builder().with {
+      rootDirectory(dir.root)
+      build()
+    }
+
+    and: 'a string depositor'
+    def depositor = hoard.createReactiveDepositor("test", String)
+
+    def testSubscriber = new TestSubscriber()
+
+    when:
+    depositor.exists().subscribe(testSubscriber)
+
+    then: 'the value does not exist'
+    testSubscriber.assertValue(false)
+    testSubscriber.onComplete()
+
+    when: 'the value is saved'
+    testSubscriber = new TestSubscriber()
+    depositor.store('yay!').subscribe(new TestSubscriber<Void>())
+    depositor.exists().subscribe(testSubscriber)
+
+    then: 'report that the value exists'
+    testSubscriber.assertValue(true)
+    testSubscriber.onComplete()
   }
 }

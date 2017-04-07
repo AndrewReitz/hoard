@@ -27,4 +27,11 @@ public interface Depositor<T> {
    * Deletes the saved value.
    */
   void delete();
+
+  /**
+   * Checks if a value has been saved.
+   *
+   * @return true if a call to {@link #retrieve()} would return a value, false otherwise.
+   */
+  boolean exists();
 }

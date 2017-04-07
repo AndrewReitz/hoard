@@ -23,4 +23,8 @@ class DefaultRxDepositor<T> implements RxDepositor<T> {
   @Override public Completable delete() {
     return Completable.fromPublisher(depositor.delete());
   }
+
+  @Override public Single<Boolean> exists() {
+    return Single.fromPublisher(depositor.exists());
+  }
 }

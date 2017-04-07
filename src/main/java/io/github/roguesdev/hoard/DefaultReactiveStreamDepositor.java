@@ -49,9 +49,10 @@ class DefaultReactiveStreamDepositor<T> implements ReactiveStreamDepositor<T> {
           @Override public void request(long n) {
             try {
               T value = depositor.retrieve();
-
               if (canceled) return;
-              s.onNext(value);
+              if (value != null) {
+                s.onNext(value);
+              }
               s.onComplete();
             } catch (Exception e) {
               if (canceled) return;
@@ -87,6 +88,34 @@ class DefaultReactiveStreamDepositor<T> implements ReactiveStreamDepositor<T> {
 
           @Override public void cancel() {
             canceled = true;
+          }
+        });
+      }
+    };
+  }
+
+  @Override public Publisher<Boolean> exists() {
+    return new Publisher<Boolean>() {
+      @Override public void subscribe(final Subscriber<? super Boolean> s) {
+        s.onSubscribe(new Subscription() {
+
+          volatile boolean canceled = false;
+
+          @Override public void request(long n) {
+            try {
+              boolean exists = depositor.exists();
+
+              if (canceled) return;
+              s.onNext(exists);
+              s.onComplete();
+            } catch (Exception e) {
+              if (canceled) return;
+              s.onError(e);
+            }
+          }
+
+          @Override public void cancel() {
+
           }
         });
       }

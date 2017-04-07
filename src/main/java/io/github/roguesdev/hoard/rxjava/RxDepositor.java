@@ -18,4 +18,5 @@ public interface RxDepositor<T> {
   Observable<Void> store(T value);
   Observable<T> retrieve();
   Observable<Void> delete();
+  Observable<Boolean> exists();
 }
