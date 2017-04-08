@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.github.rogues-dev:hoard:0.1.0'
+    compile 'com.github.rogues-dev:hoard:0.2.0'
 }
 ----
 
