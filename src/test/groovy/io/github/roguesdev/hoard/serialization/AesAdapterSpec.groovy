@@ -20,7 +20,7 @@ class AesAdapterSpec extends Specification {
 
   @Unroll void "should write #expected from disk and then read it back"() {
     given:
-    def classUnderTest = new AesSerializer<>('TestKey' as char[], 'TestSalt' as byte[])
+    def classUnderTest = new AesSerializer('TestKey' as char[], 'TestSalt' as byte[])
     def file = dir.newFile('testFile.encrypt')
     def fileInputStream = new FileInputStream(file)
     def fileOutputStream = new FileOutputStream(file)

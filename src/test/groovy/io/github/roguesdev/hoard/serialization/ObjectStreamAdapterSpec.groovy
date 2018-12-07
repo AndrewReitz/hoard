@@ -13,7 +13,7 @@ class ObjectStreamAdapterSpec extends Specification {
 
   @Unroll void "should write #expected from disk and then read it back"() {
     given:
-    def classUnderTest = new ObjectStreamSerializer<>()
+    def classUnderTest = new ObjectStreamSerializer()
     def file = dir.newFile('testFile.dat')
     def fileInputStream = new FileInputStream(file)
     def fileOutputStream = new FileOutputStream(file)

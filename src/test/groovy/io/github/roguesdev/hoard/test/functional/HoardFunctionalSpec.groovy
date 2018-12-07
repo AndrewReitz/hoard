@@ -2,8 +2,10 @@ package io.github.roguesdev.hoard.test.functional
 
 import com.squareup.moshi.Types
 import io.github.roguesdev.hoard.Hoard
+import io.github.roguesdev.hoard.serialization.ObjectStreamSerializer
 import io.github.roguesdev.hoard.test.model.Person
 import io.reactivex.subscribers.TestSubscriber
+import kotlin.Pair
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
@@ -14,10 +16,7 @@ class HoardFunctionalSpec extends Specification {
 
   void "should work with defaults"() {
     given: 'default build of hoard'
-    def hoard = Hoard.builder().with {
-      rootDirectory(dir.root)
-      build()
-    }
+    def hoard = new Hoard(dir.root, new ObjectStreamSerializer())
 
     and: 'regular depositor created'
     def depositor = hoard.createDepositor('test', String)
@@ -59,10 +58,7 @@ class HoardFunctionalSpec extends Specification {
 
   void "should delete all values"() {
     given:
-    def hoard = Hoard.builder().with {
-      rootDirectory(dir.root)
-      build()
-    }
+    def hoard = new Hoard(dir.root, new ObjectStreamSerializer())
 
     hoard.createDepositor('test1', String).store('Foo')
     hoard.createDepositor('test2', String).store('Bar')
@@ -77,10 +73,7 @@ class HoardFunctionalSpec extends Specification {
 
   void "should retrieve all values"() {
     given:
-    def hoard = Hoard.builder().with {
-      rootDirectory(dir.root)
-      build()
-    }
+    def hoard = new Hoard(dir.root, new ObjectStreamSerializer())
 
     hoard.createDepositor('test1', String).store('hello world')
     hoard.createDepositor('test2', Person).store(new Person(firstName: 'Jack', lastName: 'Sparrow'))
@@ -98,10 +91,7 @@ class HoardFunctionalSpec extends Specification {
 
   void "should work with reactive defaults"() {
     given: 'default build of hoard'
-    def hoard = Hoard.builder().with {
-      rootDirectory(dir.root)
-      build()
-    }
+    def hoard = new Hoard(dir.root, new ObjectStreamSerializer())
 
     def testSubscriber1 = new TestSubscriber()
     def testSubscriber2 = new TestSubscriber()
@@ -162,10 +152,7 @@ class HoardFunctionalSpec extends Specification {
 
   void "should delete all with reactive"() {
     given:
-    def hoard = Hoard.builder().with {
-      rootDirectory(dir.root)
-      build()
-    }
+    def hoard = new Hoard(dir.root, new ObjectStreamSerializer())
 
     def testSubscriber = new TestSubscriber()
 
@@ -185,10 +172,7 @@ class HoardFunctionalSpec extends Specification {
 
   void "should retrieve all with reactive"() {
     given:
-    def hoard = Hoard.builder().with {
-      rootDirectory(dir.root)
-      build()
-    }
+    def hoard = new Hoard(dir.root, new ObjectStreamSerializer())
 
     def testSubscriber = new TestSubscriber()
 
@@ -196,24 +180,21 @@ class HoardFunctionalSpec extends Specification {
     hoard.createDepositor('test2', Person).store(new Person(firstName: 'Jack', lastName: 'Sparrow'))
     hoard.createDepositor('test3', Types.newParameterizedType(List, Integer)).store([1, 2, 3])
 
-    def expected = [new Hoard.Pair('test1', 'hello world'), new Hoard.Pair('test2',
-      new Person(firstName: 'Jack', lastName: 'Sparrow')), new Hoard.Pair('test3', [1, 2, 3])]
+    def expected = [new Pair('test1', 'hello world'), new Pair('test2',
+      new Person(firstName: 'Jack', lastName: 'Sparrow')), new Pair('test3', [1, 2, 3])]
 
     when:
     hoard.retrieveAllReactive().subscribe(testSubscriber)
 
 
     then:
-    testSubscriber.assertValues(*expected)
+    testSubscriber.assertValueSet(expected)
     testSubscriber.assertComplete()
   }
 
   void "should return false if value does not exists"() {
     given: 'plain implementation of hoard'
-    def hoard = Hoard.builder().with {
-      rootDirectory(dir.root)
-      build()
-    }
+    def hoard = new Hoard(dir.root, new ObjectStreamSerializer())
 
     and: 'a string depositor'
     def depositor = hoard.createDepositor("test", String)
@@ -230,10 +211,7 @@ class HoardFunctionalSpec extends Specification {
 
   void "should return false if value does not exists reactive"() {
     given: 'plain implementation of hoard'
-    def hoard = Hoard.builder().with {
-      rootDirectory(dir.root)
-      build()
-    }
+    def hoard = new Hoard(dir.root, new ObjectStreamSerializer())
 
     and: 'a string depositor'
     def depositor = hoard.createReactiveDepositor("test", String)

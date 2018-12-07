@@ -13,7 +13,7 @@ class GsonAdapterSpec extends Specification {
 
   @Unroll void "should write #intput to disk"() {
     given:
-    def classUnderTest = new GsonSerializer<>()
+    def classUnderTest = new GsonSerializer()
     def file = dir.newFile('testFile.json')
     def stream = new FileOutputStream(file)
 
@@ -34,7 +34,7 @@ class GsonAdapterSpec extends Specification {
 
   @Unroll void "should read #readValue from disk"() {
     given:
-    def classUnderTest = new GsonSerializer<>()
+    def classUnderTest = new GsonSerializer()
     def file = dir.newFile('testFile.json')
     def stream = new FileInputStream(file)
 
