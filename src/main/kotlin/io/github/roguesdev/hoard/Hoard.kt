@@ -35,22 +35,20 @@ class Hoard(
     return DefaultDepositor(serializer, rootDirectory, key, type)
   }
 
+  @JvmName("-createDepositor")
   inline fun <reified T> createDepositor(key: String): Depositor<T> {
     return createDepositor(key, T::class.java)
   }
 
-  fun <T> createReactiveDepositor(key: String, type: Class<T>): ReactiveStreamDepositor<T> {
-    return createReactiveDepositor(key, type as Type)
-  }
+  fun <T> createReactiveDepositor(key: String, type: Class<T>): ReactiveStreamDepositor<T> =
+    createReactiveDepositor(key, type as Type)
 
-  fun <T> createReactiveDepositor(key: String, type: Type): ReactiveStreamDepositor<T> {
-    val depositor = createDepositor<T>(key, type)
-    return DefaultReactiveStreamDepositor(depositor)
-  }
+  fun <T> createReactiveDepositor(key: String, type: Type): ReactiveStreamDepositor<T> =
+    DefaultReactiveStreamDepositor(createDepositor(key, type))
 
-  inline fun <reified T> createReactiveDepositor(key: String): ReactiveStreamDepositor<T> {
-    return createReactiveDepositor(key, T::class.java)
-  }
+  @JvmName("-createReactiveDepositor")
+  inline fun <reified T> createReactiveDepositor(key: String): ReactiveStreamDepositor<T> =
+    createReactiveDepositor(key, T::class.java)
 
   /** Deletes all values stored by [Hoard].  */
   fun deleteAll() {
@@ -88,7 +86,8 @@ class Hoard(
   fun deleteAllReactive(): Publisher<Unit> {
     return Publisher { s ->
       s.onSubscribe(object : Subscription {
-        @Volatile var canceled = false
+        @Volatile
+        var canceled = false
 
         override fun request(n: Long) {
           try {
@@ -121,7 +120,8 @@ class Hoard(
     return Publisher { s ->
       s.onSubscribe(object : Subscription {
 
-        @Volatile var canceled = false
+        @Volatile
+        var canceled = false
 
         override fun request(n: Long) {
           val list = rootDirectory.list()

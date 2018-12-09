@@ -20,7 +20,7 @@
  * @since 1.0.0
  */
 @file:JvmName("Types")
-@file:Suppress("unused")
+@file:Suppress("unused", "NOTHING_TO_INLINE")
 
 package io.github.roguesdev.hoard
 
@@ -37,9 +37,8 @@ private val EMPTY_TYPE_ARRAY = arrayOf<Type>()
  * Returns a new parameterized type, applying `typeArguments` to `rawType`. Use this
  * method if `rawType` is not enclosed in another type.
  */
-fun newParameterizedType(rawType: Type, vararg typeArguments: Type): ParameterizedType {
-  return ParameterizedTypeImpl(null, rawType, *typeArguments)
-}
+fun newParameterizedType(rawType: Type, vararg typeArguments: Type): ParameterizedType =
+  ParameterizedTypeImpl(null, rawType, *typeArguments)
 
 /**
  * Returns a new parameterized type, applying `typeArguments` to `rawType`. Use this
@@ -49,30 +48,23 @@ fun newParameterizedTypeWithOwner(
   ownerType: Type,
   rawType: Type,
   vararg typeArguments: Type
-): ParameterizedType {
-  return ParameterizedTypeImpl(ownerType, rawType, *typeArguments)
-}
+): ParameterizedType = ParameterizedTypeImpl(ownerType, rawType, *typeArguments)
 
 /** Returns an array type whose elements are all instances of `componentType`.  */
-fun arrayOf(componentType: Type): GenericArrayType {
-  return GenericArrayTypeImpl(componentType)
-}
+@JvmName("arrayOf")
+fun arrayTypeOf(componentType: Type): GenericArrayType = GenericArrayTypeImpl(componentType)
 
 /**
  * Returns a type that represents an unknown type that extends `bound`. For example, if
  * `bound` is `CharSequence.class`, this returns `? extends CharSequence`. If
  * `bound` is `Object.class`, this returns `?`, which is shorthand for `? extends Object`.
  */
-fun subtypeOf(bound: Type): WildcardType {
-  return WildcardTypeImpl(arrayOf<Type>(bound), EMPTY_TYPE_ARRAY)
-}
+fun subtypeOf(bound: Type): WildcardType = WildcardTypeImpl(arrayOf(bound), EMPTY_TYPE_ARRAY)
 
 /**
  * Returns a type that represents an unknown supertype of `bound`. For example, if `bound` is `String.class`, this returns `? super String`.
  */
-fun supertypeOf(bound: Type): WildcardType {
-  return WildcardTypeImpl(arrayOf<Type>(Any::class.java), arrayOf<Type>(bound))
-}
+fun supertypeOf(bound: Type): WildcardType = WildcardTypeImpl(arrayOf(Any::class.java), arrayOf(bound))
 
 /**
  * Returns a type that is functionally equal but not necessarily equal according to [ ][Object.equals].
@@ -92,35 +84,50 @@ private fun canonicalize(type: Type): Type {
   }
 }
 
-private fun equal(a: Any?, b: Any): Boolean {
+private fun equal(a: Any?, b: Any?): Boolean {
   @Suppress("SuspiciousEqualsCombination")
   return a === b || a != null && a == b
 }
 
 /** Returns true if `a` and `b` are equal.  */
-private fun equals(a: Type, b: Type): Boolean {
-  when {
-    a === b -> return true // Also handles (a == null && b == null).
-    a is Class<*> -> return a == b // Class already specifies equals().
-    a is ParameterizedType -> {
-      if (b !is ParameterizedType) return false
-      val aTypeArguments = (a as? ParameterizedTypeImpl)?.typeArguments ?: a.actualTypeArguments
-      val bTypeArguments = (b as? ParameterizedTypeImpl)?.typeArguments ?: b.actualTypeArguments
-      return (equal(a.ownerType, b.ownerType) &&
-        a.rawType == b.rawType &&
-        Arrays.equals(aTypeArguments, bTypeArguments))
-    }
-    else -> return if (a is GenericArrayType) {
-      if (b !is GenericArrayType) false else equals(a.genericComponentType, b.genericComponentType)
-    } else if (a is WildcardType) {
-      if (b !is WildcardType) false else Arrays.equals(a.upperBounds, b.upperBounds) && Arrays.equals(a.lowerBounds, b.lowerBounds)
-    } else if (a is TypeVariable<*>) {
-      if (b !is TypeVariable<*>) false else a.genericDeclaration === b.genericDeclaration && a.name == b.name
-    } else {
-      // This isn't a supported type.
-      false
-    }
+internal fun equals(a: Type?, b: Type?): Boolean {
+  if (a === b) return true
+
+  if (a is Class<*>) {
+    return if (b is GenericArrayType) equals(a.componentType, b.genericComponentType)
+    else a == b
   }
+
+  if (a is ParameterizedType) {
+    if (b !is ParameterizedType) return false
+    return equals(a.ownerType, b.ownerType) &&
+      a.rawType == b.rawType &&
+      a.actualTypeArguments?.contentEquals(b.actualTypeArguments) ?: false
+  }
+
+  if (a is GenericArrayType) {
+    if (b is Class<*>) {
+      return equals(b.componentType, a.genericComponentType)
+    }
+
+    if (b !is GenericArrayType) return false
+
+    return equals(a.genericComponentType, b.genericComponentType)
+  }
+
+  if (a is WildcardType) {
+    if (b !is WildcardType) return false
+
+    return a.upperBounds?.contentEquals(b.upperBounds) ?: false &&
+      a.lowerBounds?.contentEquals(b.lowerBounds) ?: false
+  }
+
+  if (a is TypeVariable<*>) {
+    if (b !is TypeVariable<*>) return false
+    return a.genericDeclaration === b.genericDeclaration && a.name == b.name
+  }
+
+  return false
 }
 
 private fun hashCodeOrZero(o: Any?): Int {
@@ -133,11 +140,11 @@ private fun typeToString(type: Type): String {
 
 private fun checkNotPrimitive(type: Type) {
   if (type is Class<*> && type.isPrimitive) {
-    throw IllegalArgumentException()
+    throw IllegalArgumentException("Unexpected primitive $type. Use the boxed type.")
   }
 }
 
-private class ParameterizedTypeImpl internal constructor(ownerType: Type?, rawType: Type, vararg typeArguments: Type) : ParameterizedType {
+private class ParameterizedTypeImpl(ownerType: Type?, rawType: Type, vararg typeArguments: Type) : ParameterizedType {
   private val ownerType: Type?
   private val rawType: Type
   internal val typeArguments: Array<Type>
@@ -242,11 +249,11 @@ private class WildcardTypeImpl(upperBounds: Array<Type>, lowerBounds: Array<Type
   }
 
   override fun getUpperBounds(): Array<Type> {
-    return arrayOf<Type>(upperBound)
+    return arrayOf(upperBound)
   }
 
   override fun getLowerBounds(): Array<Type> {
-    return if (lowerBound != null) arrayOf<Type>(lowerBound) else EMPTY_TYPE_ARRAY
+    return if (lowerBound != null) arrayOf(lowerBound) else EMPTY_TYPE_ARRAY
   }
 
   override fun equals(other: Any?): Boolean {
@@ -259,8 +266,8 @@ private class WildcardTypeImpl(upperBounds: Array<Type>, lowerBounds: Array<Type
   }
 
   override fun toString(): String = when {
-      lowerBound != null -> "? super " + typeToString(lowerBound)
-      upperBound === Any::class.java -> "?"
-      else -> "? extends " + typeToString(upperBound)
+    lowerBound != null -> "? super " + typeToString(lowerBound)
+    upperBound === Any::class.java -> "?"
+    else -> "? extends " + typeToString(upperBound)
   }
 }

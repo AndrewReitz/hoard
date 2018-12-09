@@ -1,5 +1,6 @@
 import com.netflix.nebula.interop.action
 import org.jetbrains.kotlin.config.KotlinCompilerVersion
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   `java-library`
@@ -44,9 +45,13 @@ dependencies {
   implementation("io.reactivex:rxjava-reactive-streams:1.2.1", { optional(this) })
   implementation("io.reactivex.rxjava2:rxjava:2.2.4", { optional(this) })
 
-  testImplementation( "org.spockframework:spock-core:1.2-groovy-2.5")
-  testImplementation( "net.bytebuddy:byte-buddy:1.9.5")
-  testImplementation( "org.objenesis:objenesis:3.0.1")
+  testImplementation("org.spockframework:spock-core:1.2-groovy-2.5")
+  testImplementation("org.codehaus.groovy:groovy:2.5.4")
+  testImplementation("net.bytebuddy:byte-buddy:1.9.5")
+  testImplementation("org.objenesis:objenesis:3.0.1")
+
+  testImplementation("org.amshove.kluent:kluent:1.44")
+  testImplementation("org.assertj:assertj-core:2.9.1")
 
   // needed to test encryption on jvm
   testImplementation( "org.bouncycastle:bcprov-jdk15on:1.60")
